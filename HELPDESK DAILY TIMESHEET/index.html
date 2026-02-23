@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Helpdesk Timesheet - Manager System</title>
+    <style>
+        * { box-sizing: border-box; font-family: Arial, sans-serif; }
+        
+        /* Body with background image */
+        body { 
+            padding: 0; 
+            margin: 0;
+            min-height: 100vh;
+            background: url('ftthsa.png') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Semi-transparent overlay for better readability */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 0;
+        }
+        
+        .container { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+        }
+        
+        /* Login Styles */
+        .login-container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .login-container h2 { 
+            text-align: center; 
+            margin-bottom: 30px; 
+            color: #333;
+            font-size: 28px;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.5);
+        }
+        
+        .login-container input {
+            width: 100%;
+            padding: 14px;
+            margin: 10px 0;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .login-container input:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 10px rgba(0,123,255,0.2);
+        }
+        
+        .login-container button {
+            width: 100%;
+            padding: 14px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px 0;
+            transition: background 0.3s;
+        }
+        
+        .login-container button:hover { 
+            background: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .error-msg { 
+            color: #dc3545; 
+            text-align: center; 
+            margin: 10px 0; 
+            font-weight: bold;
+            background: rgba(220,53,69,0.1);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .success-msg { 
+            color: #28a745; 
+            text-align: center; 
+            margin: 10px 0; 
+            font-weight: bold;
+            background: rgba(40,167,69,0.1);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            z-index: 10;
+        }
+        
+        .user-info {
+            position: absolute;
+            top: 20px;
+            right: 150px;
+            color: #28a745;
+            font-weight: bold;
+            z-index: 10;
+            background: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .main-content {
+            display: none;
+            position: relative;
+            background: white;
+            margin: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            z-index: 1;
+        }
+        
+        /* Original styles */
+        h2 { color: #333; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+        .form-section { background: #f9f9f9; padding: 15px; margin: 15px 0; border-radius: 5px; border-left: 4px solid #007bff; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin: 15px 0; }
+        .form-group { margin-bottom: 10px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 12px; color: #555; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-right: 10px; }
+        button:hover { background: #0056b3; }
+        button.danger { background: #dc3545; }
+        button.success { background: #28a745; }
+        .entries-list { margin-top: 30px; }
+        .entry-item { background: #f9f9f9; padding: 15px; margin: 10px 0; border-radius: 5px; border: 1px solid #ddd; }
+        .entry-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .entry-date { font-weight: bold; color: #007bff; }
+        .entry-actions button { padding: 5px 10px; font-size: 12px; margin: 0 5px; }
+        .summary { background: #e8f4fd; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .report-view { display: none; }
+        .active-view { display: block; }
+        .print-only { display: none; }
+        @media print {
+            .no-print { display: none; }
+            .print-only { display: block; }
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; }
+        }
+        .tab { display: inline-block; padding: 10px 20px; background: #ddd; cursor: pointer; margin-right: 5px; border-radius: 5px 5px 0 0; }
+        .tab.active { background: #007bff; color: white; }
+        .user-badge { background: #007bff; color: white; padding: 5px 10px; border-radius: 20px; display: inline-block; margin-bottom: 10px; }
+        .staff-list { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 10px; 
+            margin: 20px 0; 
+            padding: 15px; 
+            background: #f0f0f0; 
+            border-radius: 5px; 
+        }
+        .staff-tag { 
+            background: #28a745; 
+            color: white; 
+            padding: 5px 15px; 
+            border-radius: 20px; 
+            font-size: 14px; 
+        }
+    </style>
+</head>
+<body>
+    <!-- LOGIN PAGE (Only for Manager) -->
+    <div id="login-page" class="login-container">
+        <h2>HELPDESK DAILY TIMESHEET</h2>
+        
+        <div id="login-mode">
+            <input type="text" id="login-username" placeholder="Username" value="Lebo">
+            <input type="password" id="login-password" placeholder="Password" value="">
+            <button onclick="login()">Login</button>
+        </div>
+        
+        <div id="login-message" class="error-msg"></div>
+        <div style="margin-top: 20px; font-size: 12px; color: #666; text-align: center;">
+           
+        </div>
+    </div>
+
+    <!-- MAIN APP (HIDDEN UNTIL LOGIN) -->
+    <div id="main-app" class="container main-content">
+        <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+        <div class="user-info" id="user-info"></div>
+        
+        <h1>📋 Helpdesk Daily Timesheet</h1>
+        
+        <!-- Staff List Display -->
+        <div class="staff-list">
+            <strong>Staff Members:</strong>
+            <span class="staff-tag">Casey</span>
+            <span class="staff-tag">Noma</span>
+            <span class="staff-tag">Talent</span>
+            <span class="staff-tag">Sanele</span>
+            <span class="staff-tag">Njabulo</span>
+            <span class="staff-tag">Silius</span>
+            <span class="staff-tag">Bonolo</span>
+            <span class="staff-tag">Lebo</span>
+        </div>
+        
+        <!-- Simple Tabs -->
+        <div>
+            <span class="tab active" onclick="showTab('entry')" id="tab-entry">📝 Daily Entry</span>
+            <span class="tab" onclick="showTab('view')" id="tab-view">👀 View All</span>
+            <span class="tab" onclick="showTab('report')" id="tab-report">📊 Monthly Report</span>
+        </div>
+
+        <!-- ========== TAB 1: DAILY ENTRY ========== -->
+        <div id="entry-view" class="active-view">
+            <h2>Daily Timesheet Entry</h2>
+            
+            <!-- User Selection (Staff List) -->
+            <div class="form-group" style="max-width: 300px;">
+                <label>Select Staff Member</label>
+                <select id="staff-select" onchange="loadTodayEntry()">
+                    <option value="">-- Select Staff --</option>
+                    <option value="Casey">Casey</option>
+                    <option value="Noma">Noma</option>
+                    <option value="Talent">Talent</option>
+                    <option value="Sanele">Sanele</option>
+                    <option value="Njabulo">Njabulo</option>
+                    <option value="Silius">Silius</option>
+                    <option value="Bonolo">Bonolo</option>
+                    <option value="Lebo">Lebo</option>
+                </select>
+            </div>
+            
+            <!-- Hidden field for editing -->
+            <input type="hidden" id="edit-id" value="">
+            
+            <form id="entry-form" onsubmit="saveEntry(event)">
+                <!-- Date -->
+                <div class="form-group" style="max-width: 200px;">
+                    <label>Date</label>
+                    <input type="date" id="entry-date" required>
+                </div>
+
+                <!-- Section 1: Communication Handling -->
+                <div class="form-section">
+                    <h3>📞 Communication Handling</h3>
+                    <div class="grid">
+                        <div class="form-group">
+                            <label>Inbound Calls</label>
+                            <input type="number" id="inbound-calls" value="0" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>WhatsApp Chats</label>
+                            <input type="number" id="whatsapp-chats" value="0" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Emails</label>
+                            <input type="number" id="emails" value="0" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Ticket Management -->
+                <div class="form-section">
+                    <h3>🎫 Ticket Management</h3>
+                    <div class="grid">
+                        <div class="form-group">
+                            <label>General Tickets Logged</label>
+                            <input type="number" id="gen-logged" value="0" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>General Tickets Resolved</label>
+                            <input type="number" id="gen-resolved" value="0" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Network Down Logged</label>
+                            <input type="number" id="net-logged" value="0" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Network Down Resolved</label>
+                            <input type="number" id="net-resolved" value="0" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Fibre Break Logged</label>
+                            <input type="number" id="fibre-logged" value="0" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Fibre Break Resolved</label>
+                            <input type="number" id="fibre-resolved" value="0" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Installations -->
+                <div class="form-section">
+                    <h3>🔧 Installations & Scheduling</h3>
+                    <div class="grid">
+                        <div class="form-group">
+                            <label>New Installations Scheduled</label>
+                            <input type="number" id="installations" value="0" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Fibre Break Jobs Booked</label>
+                            <input type="number" id="fibre-bookings" value="0" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>TOC Sent</label>
+                            <input type="number" id="toc-sent" value="0" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 4: Campaigns -->
+                <div class="form-section">
+                    <h3>📢 Campaign & Lead Management</h3>
+                    <div class="grid">
+                        <div class="form-group">
+                            <label>Leads Received</label>
+                            <input type="number" id="leads-received" value="0" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Leads Contacted</label>
+                            <input type="number" id="leads-contacted" value="0" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Leads Converted</label>
+                            <input type="number" id="leads-converted" value="0" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 5: System Admin -->
+                <div class="form-section">
+                    <h3>💻 System Administration</h3>
+                    <div class="grid">
+                        <div class="form-group">
+                            <label><input type="checkbox" id="system-updated"> System Updated</label>
+                        </div>
+                        <div class="form-group">
+                            <label><input type="checkbox" id="servcraft-updated"> Servcraft Updated</label>
+                        </div>
+                        <div class="form-group">
+                            <label><input type="checkbox" id="router-updated"> Router Recon Updated</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="form-section">
+                    <h3>📝 Notes</h3>
+                    <textarea id="notes" rows="3" style="width: 100%;"></textarea>
+                </div>
+
+                <!-- Buttons -->
+                <div style="margin-top: 20px;">
+                    <button type="submit">💾 Save Entry</button>
+                    <button type="button" class="danger" onclick="clearForm()">🗑️ Clear Form</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ========== TAB 2: VIEW ALL ENTRIES ========== -->
+        <div id="view-view" style="display: none;">
+            <h2>All Timesheet Entries</h2>
+            
+            <div style="margin-bottom: 20px;">
+                <select id="filter-staff" onchange="displayEntries()">
+                    <option value="">All Staff</option>
+                    <option value="Casey">Casey</option>
+                    <option value="Noma">Noma</option>
+                    <option value="Talent">Talent</option>
+                    <option value="Sanele">Sanele</option>
+                    <option value="Njabulo">Njabulo</option>
+                    <option value="Silius">Silius</option>
+                    <option value="Bonolo">Bonolo</option>
+                    <option value="Lebo">Lebo</option>
+                </select>
+                <input type="date" id="filter-date" onchange="displayEntries()">
+                <button onclick="displayEntries()" class="success">🔍 Filter</button>
+                <button onclick="clearFilter()">Clear Filter</button>
+            </div>
+            
+            <div id="entries-container"></div>
+        </div>
+
+        <!-- ========== TAB 3: MONTHLY REPORT ========== -->
+        <div id="report-view" style="display: none;">
+            <h2>Monthly Report</h2>
+            
+            <div style="margin-bottom: 20px; background: #f0f0f0; padding: 15px; border-radius: 5px;">
+                <select id="report-staff" style="padding: 8px; margin-right: 10px;">
+                    <option value="">Select Staff Member</option>
+                    <option value="Casey">Casey</option>
+                    <option value="Noma">Noma</option>
+                    <option value="Talent">Talent</option>
+                    <option value="Sanele">Sanele</option>
+                    <option value="Njabulo">Njabulo</option>
+                    <option value="Silius">Silius</option>
+                    <option value="Bonolo">Bonolo</option>
+                    <option value="Lebo">Lebo</option>
+                </select>
+                
+                <input type="month" id="report-month" style="padding: 8px; margin-right: 10px;">
+                
+                <button onclick="generateReport()" class="success">📊 Generate Report</button>
+                <button onclick="printReport()" class="success">🖨️ Print Report</button>
+            </div>
+            
+            <div id="report-container"></div>
+        </div>
+    </div>
+
+    <script>
+        // ========== MANAGER LOGIN (Only one user) ==========
+        const managerUser = 'Lebo';
+        const managerPassword = 'Lebo2026';
+        const currentUserKey = 'manager_logged_in';
+
+        // Login
+        function login() {
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+
+            if (username === managerUser && password === managerPassword) {
+                // Login successful
+                localStorage.setItem(currentUserKey, 'true');
+                showMainApp();
+            } else {
+                document.getElementById('login-message').innerHTML = 'Invalid username or password';
+            }
+        }
+
+        // Logout
+        function logout() {
+            localStorage.removeItem(currentUserKey);
+            document.getElementById('main-app').style.display = 'none';
+            document.getElementById('login-page').style.display = 'block';
+            document.getElementById('login-username').value = 'Lebo';
+            document.getElementById('login-password').value = 'Lebo2026';
+            document.getElementById('login-message').innerHTML = '';
+        }
+
+        // Show main app
+        function showMainApp() {
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+            document.getElementById('user-info').innerHTML = `👤 Logged in as: Lebo`;
+            
+            // Clear any sensitive form data
+            clearForm();
+        }
+
+        // Check if already logged in
+        function checkLogin() {
+            const isLoggedIn = localStorage.getItem(currentUserKey);
+            if (isLoggedIn === 'true') {
+                showMainApp();
+            }
+        }
+
+        // ========== DATA STORAGE (All entries in one place) ==========
+        function getEntries() {
+            let entries = localStorage.getItem('timesheet_entries');
+            return entries ? JSON.parse(entries) : [];
+        }
+
+        function saveEntries(entries) {
+            localStorage.setItem('timesheet_entries', JSON.stringify(entries));
+        }
+
+        // ========== TAB SWITCHING ==========
+        function showTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            
+            document.getElementById('entry-view').style.display = 'none';
+            document.getElementById('view-view').style.display = 'none';
+            document.getElementById('report-view').style.display = 'none';
+            
+            document.getElementById(`${tab}-view`).style.display = 'block';
+            
+            if (tab === 'view') displayEntries();
+        }
+
+        // ========== SAVE ENTRY (CREATE/UPDATE) ==========
+        function saveEntry(event) {
+            event.preventDefault();
+            
+            const staff = document.getElementById('staff-select').value;
+            if (!staff) {
+                alert('Please select a staff member');
+                return;
+            }
+            
+            const date = document.getElementById('entry-date').value;
+            if (!date) {
+                alert('Please select a date');
+                return;
+            }
+            
+            const editId = document.getElementById('edit-id').value;
+            
+            const entry = {
+                id: editId || Date.now().toString(),
+                staff: staff,
+                date: date,
+                inbound_calls: parseInt(document.getElementById('inbound-calls').value) || 0,
+                whatsapp_chats: parseInt(document.getElementById('whatsapp-chats').value) || 0,
+                emails: parseInt(document.getElementById('emails').value) || 0,
+                gen_logged: parseInt(document.getElementById('gen-logged').value) || 0,
+                gen_resolved: parseInt(document.getElementById('gen-resolved').value) || 0,
+                net_logged: parseInt(document.getElementById('net-logged').value) || 0,
+                net_resolved: parseInt(document.getElementById('net-resolved').value) || 0,
+                fibre_logged: parseInt(document.getElementById('fibre-logged').value) || 0,
+                fibre_resolved: parseInt(document.getElementById('fibre-resolved').value) || 0,
+                installations: parseInt(document.getElementById('installations').value) || 0,
+                fibre_bookings: parseInt(document.getElementById('fibre-bookings').value) || 0,
+                toc_sent: parseInt(document.getElementById('toc-sent').value) || 0,
+                leads_received: parseInt(document.getElementById('leads-received').value) || 0,
+                leads_contacted: parseInt(document.getElementById('leads-contacted').value) || 0,
+                leads_converted: parseInt(document.getElementById('leads-converted').value) || 0,
+                system_updated: document.getElementById('system-updated').checked,
+                servcraft_updated: document.getElementById('servcraft-updated').checked,
+                router_updated: document.getElementById('router-updated').checked,
+                notes: document.getElementById('notes').value
+            };
+            
+            let entries = getEntries();
+            
+            // Check if entry exists for this staff/date (if not editing)
+            if (!editId) {
+                const exists = entries.some(e => e.staff === staff && e.date === date);
+                if (exists) {
+                    if (!confirm('Entry already exists for this date. Do you want to update it?')) {
+                        return;
+                    }
+                    // Remove old entry
+                    entries = entries.filter(e => !(e.staff === staff && e.date === date));
+                }
+            } else {
+                entries = entries.filter(e => e.id !== editId);
+            }
+            
+            entries.push(entry);
+            saveEntries(entries);
+            
+            alert('Entry saved successfully!');
+            clearForm();
+            showTab('view');
+            displayEntries();
+        }
+
+        // ========== LOAD TODAY'S ENTRY FOR SELECTED STAFF ==========
+        function loadTodayEntry() {
+            const staff = document.getElementById('staff-select').value;
+            if (!staff) return;
+            
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('entry-date').value = today;
+            
+            const entries = getEntries();
+            const existing = entries.find(e => e.staff === staff && e.date === today);
+            
+            if (existing) {
+                if (confirm('Entry exists for today. Load it for editing?')) {
+                    loadEntryForEdit(existing);
+                }
+            }
+        }
+
+        // ========== LOAD ENTRY FOR EDITING ==========
+        function loadEntryForEdit(entry) {
+            document.getElementById('edit-id').value = entry.id;
+            document.getElementById('staff-select').value = entry.staff;
+            document.getElementById('entry-date').value = entry.date;
+            document.getElementById('inbound-calls').value = entry.inbound_calls;
+            document.getElementById('whatsapp-chats').value = entry.whatsapp_chats;
+            document.getElementById('emails').value = entry.emails;
+            document.getElementById('gen-logged').value = entry.gen_logged;
+            document.getElementById('gen-resolved').value = entry.gen_resolved;
+            document.getElementById('net-logged').value = entry.net_logged;
+            document.getElementById('net-resolved').value = entry.net_resolved;
+            document.getElementById('fibre-logged').value = entry.fibre_logged;
+            document.getElementById('fibre-resolved').value = entry.fibre_resolved;
+            document.getElementById('installations').value = entry.installations;
+            document.getElementById('fibre-bookings').value = entry.fibre_bookings;
+            document.getElementById('toc-sent').value = entry.toc_sent;
+            document.getElementById('leads-received').value = entry.leads_received;
+            document.getElementById('leads-contacted').value = entry.leads_contacted;
+            document.getElementById('leads-converted').value = entry.leads_converted;
+            document.getElementById('system-updated').checked = entry.system_updated;
+            document.getElementById('servcraft-updated').checked = entry.servcraft_updated;
+            document.getElementById('router-updated').checked = entry.router_updated;
+            document.getElementById('notes').value = entry.notes || '';
+            
+            showTab('entry');
+        }
+
+        // ========== DISPLAY ALL ENTRIES (WITH FILTERS) ==========
+        function displayEntries() {
+            let entries = getEntries();
+            const staffFilter = document.getElementById('filter-staff').value;
+            const dateFilter = document.getElementById('filter-date').value;
+            
+            if (staffFilter) {
+                entries = entries.filter(e => e.staff === staffFilter);
+            }
+            if (dateFilter) {
+                entries = entries.filter(e => e.date === dateFilter);
+            }
+            
+            // Sort by date (newest first)
+            entries.sort((a, b) => b.date.localeCompare(a.date));
+            
+            const container = document.getElementById('entries-container');
+            
+            if (entries.length === 0) {
+                container.innerHTML = '<p>No entries found.</p>';
+                return;
+            }
+            
+            let html = '';
+            entries.forEach(entry => {
+                html += `
+                    <div class="entry-item">
+                        <div class="entry-header">
+                            <div>
+                                <span class="entry-date">${entry.date}</span> - 
+                                <span class="user-badge" style="background: #28a745;">${entry.staff}</span>
+                            </div>
+                            <div class="entry-actions">
+                                <button onclick='loadEntryForEdit(${JSON.stringify(entry).replace(/'/g, "\\'")})'>✏️ Edit</button>
+                                <button class="danger" onclick="deleteEntry('${entry.id}')">🗑️ Delete</button>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px;">
+                            <div>📞 Calls: ${entry.inbound_calls}</div>
+                            <div>💬 WhatsApp: ${entry.whatsapp_chats}</div>
+                            <div>📧 Emails: ${entry.emails}</div>
+                            <div>🎫 Tickets: ${entry.gen_logged}</div>
+                            <div>🔧 Install: ${entry.installations}</div>
+                            <div>📊 Leads: ${entry.leads_received}</div>
+                        </div>
+                        ${entry.notes ? `<div style="margin-top: 10px; color: #666;">📝 ${entry.notes}</div>` : ''}
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // ========== DELETE ENTRY ==========
+        function deleteEntry(id) {
+            if (confirm('Are you sure you want to delete this entry?')) {
+                let entries = getEntries();
+                entries = entries.filter(e => e.id !== id);
+                saveEntries(entries);
+                displayEntries();
+            }
+        }
+
+        // ========== GENERATE MONTHLY REPORT ==========
+        function generateReport() {
+            const staff = document.getElementById('report-staff').value;
+            const month = document.getElementById('report-month').value;
+            
+            if (!staff || !month) {
+                alert('Please select both staff member and month');
+                return;
+            }
+            
+            const entries = getEntries();
+            const [year, mon] = month.split('-');
+            
+            // Filter entries for selected staff and month
+            const monthEntries = entries.filter(e => 
+                e.staff === staff && 
+                e.date.startsWith(`${year}-${mon}`)
+            );
+            
+            if (monthEntries.length === 0) {
+                document.getElementById('report-container').innerHTML = '<p>No entries for this period.</p>';
+                return;
+            }
+            
+            // Calculate totals
+            const totals = {
+                inbound_calls: 0,
+                whatsapp_chats: 0,
+                emails: 0,
+                gen_logged: 0,
+                gen_resolved: 0,
+                net_logged: 0,
+                net_resolved: 0,
+                fibre_logged: 0,
+                fibre_resolved: 0,
+                installations: 0,
+                fibre_bookings: 0,
+                toc_sent: 0,
+                leads_received: 0,
+                leads_contacted: 0,
+                leads_converted: 0
+            };
+            
+            monthEntries.forEach(entry => {
+                Object.keys(totals).forEach(key => {
+                    totals[key] += entry[key] || 0;
+                });
+            });
+            
+            // Sort entries by date
+            monthEntries.sort((a, b) => a.date.localeCompare(b.date));
+            
+            // Build report HTML
+            let reportHTML = `
+                <div id="report-print-area">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <h2>Monthly Timesheet Report</h2>
+                        <h3>${staff} - ${month}</h3>
+                    </div>
+                    
+                    <div class="summary">
+                        <h3>📊 Summary Totals</h3>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                            <div>
+                                <h4>Communications</h4>
+                                <p>Inbound Calls: ${totals.inbound_calls}</p>
+                                <p>WhatsApp Chats: ${totals.whatsapp_chats}</p>
+                                <p>Emails: ${totals.emails}</p>
+                            </div>
+                            <div>
+                                <h4>Tickets</h4>
+                                <p>General Logged: ${totals.gen_logged}</p>
+                                <p>General Resolved: ${totals.gen_resolved}</p>
+                                <p>Network Down: ${totals.net_logged}</p>
+                                <p>Fibre Break: ${totals.fibre_logged}</p>
+                            </div>
+                            <div>
+                                <h4>Installations & Leads</h4>
+                                <p>Installations: ${totals.installations}</p>
+                                <p>Fibre Bookings: ${totals.fibre_bookings}</p>
+                                <p>Leads Received: ${totals.leads_received}</p>
+                                <p>Leads Converted: ${totals.leads_converted}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3>📅 Daily Breakdown</h3>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                        <thead>
+                            <tr style="background: #007bff; color: white;">
+                                <th style="padding: 8px; border: 1px solid #ddd;">Date</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Calls</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">WhatsApp</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Emails</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Tickets</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Install</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Leads</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            monthEntries.forEach(entry => {
+                reportHTML += `
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${entry.date}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${entry.inbound_calls}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${entry.whatsapp_chats}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${entry.emails}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${entry.gen_logged}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${entry.installations}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${entry.leads_received}</td>
+                    </tr>
+                `;
+            });
+            
+            reportHTML += `
+                        </tbody>
+                    </table>
+                    <p style="margin-top: 20px;"><strong>Total Days Worked:</strong> ${monthEntries.length}</p>
+                </div>
+            `;
+            
+            document.getElementById('report-container').innerHTML = reportHTML;
+        }
+
+        // ========== PRINT REPORT ==========
+        function printReport() {
+            const reportContent = document.getElementById('report-container').innerHTML;
+            if (!reportContent || reportContent.includes('No entries')) {
+                alert('Please generate a report first');
+                return;
+            }
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Timesheet Report</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; padding: 20px; }
+                            table { border-collapse: collapse; width: 100%; }
+                            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                            th { background: #007bff; color: white; }
+                            .summary { background: #f0f0f0; padding: 15px; border-radius: 5px; margin: 20px 0; }
+                            @media print {
+                                button { display: none; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        ${reportContent}
+                    </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        // ========== CLEAR FORM ==========
+        function clearForm() {
+            document.getElementById('edit-id').value = '';
+            document.getElementById('entry-form').reset();
+            document.getElementById('entry-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('staff-select').value = '';
+            
+            // Reset all numbers to 0
+            document.querySelectorAll('input[type="number"]').forEach(input => input.value = '0');
+            document.querySelectorAll('input[type="checkbox"]').forEach(input => input.checked = false);
+            document.getElementById('notes').value = '';
+        }
+
+        // ========== CLEAR FILTER ==========
+        function clearFilter() {
+            document.getElementById('filter-staff').value = '';
+            document.getElementById('filter-date').value = '';
+            displayEntries();
+        }
+
+        // ========== INITIAL SETUP ==========
+        // Check if manager is already logged in
+        checkLogin();
+    </script>
+</body>
+</html>
