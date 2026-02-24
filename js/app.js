@@ -5,7 +5,7 @@ const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export
 
 // IMPORTANT: You need to create a Google Apps Script Web App URL for saving
 // For now, we'll use localStorage as backup until you set this up
-const WEB_APP_URL = ''; // Leave empty for now - we'll focus on reading first
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyGUtcErx8xyr_nUglJ88xG2YAmvxLLDO1tQ2JypO9QSl5SUb2rsnNGeCKzmO_ROUdx/exec'; // Leave empty for now - we'll focus on reading first
 
 // ========== MANAGER LOGIN ==========
 const managerUser = 'Lebo';
@@ -145,9 +145,9 @@ function refreshFromSheets() {
     loadFromSheets();
 }
 
-// Save entry to Google Sheets (via Web App) - simplified for now
+// Save entry to Google Sheets (via Web App)
 async function saveToSheets(entry) {
-    console.log('Saving entry locally:', entry);
+    console.log('Saving to sheets:', entry);
     
     // Update cache
     const existingIndex = entriesCache.findIndex(e => e.id === entry.id);
@@ -160,10 +160,31 @@ async function saveToSheets(entry) {
     // Save to localStorage as backup
     localStorage.setItem('timesheet_entries', JSON.stringify(entriesCache));
     
-    document.getElementById('sync-status').innerHTML = '✅ Saved Locally';
-    
-    // Note: For now, we're only saving locally
-    // To enable cloud saving, you'll need to set up a Google Apps Script Web App
+    // If Web App URL is configured, send data to Google Sheets
+    if (WEB_APP_URL && WEB_APP_URL !== '') {
+        try {
+            document.getElementById('sync-status').innerHTML = '🔄 Saving to Cloud...';
+            
+            const response = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors', // This prevents CORS issues
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(entry)
+            });
+            
+            document.getElementById('sync-status').innerHTML = '✅ Saved to Cloud';
+            console.log('Cloud save initiated successfully');
+            
+        } catch (error) {
+            console.error('Error saving to cloud:', error);
+            document.getElementById('sync-status').innerHTML = '⚠️ Saved Locally Only';
+        }
+    } else {
+        document.getElementById('sync-status').innerHTML = '✅ Saved Locally';
+        console.log('Web App URL not configured. Data saved locally only.');
+    }
     
     return true;
 }
@@ -538,4 +559,5 @@ function clearFilter() {
 document.addEventListener('DOMContentLoaded', function() {
     checkLogin();
 });
+
 
