@@ -3,7 +3,7 @@ const SHEET_ID = '1ylBjNdwEdB75RQJEHI4dviYS5NgB1A0bpa9ILGQFeIc';
 const SHEET_GID = '0';
 const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
 // For writing, we'll use a simple form submit to Google Forms-like endpoint
-const WEB_APP_URL = 'YOUR_WEB_APP_URL_HERE';  // You'll get this from Apps Script
+const WEB_APP_URL = 'https://njabulosimza.github.io/HELPDESKLEBO/';  // You'll get this from Apps Script
 
 // ========== MANAGER LOGIN ==========
 const managerUser = 'Lebo';
@@ -515,3 +515,4 @@ document.addEventListener('DOMContentLoaded', function() {
     checkLogin();
 
 });
+
