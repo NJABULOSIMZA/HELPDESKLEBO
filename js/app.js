@@ -5,7 +5,7 @@ const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export
 
 // IMPORTANT: You need to create a Google Apps Script Web App URL for saving
 // For now, we'll use localStorage as backup until you set this up
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyGUtcErx8xyr_nUglJ88xG2YAmvxLLDO1tQ2JypO9QSl5SUb2rsnNGeCKzmO_ROUdx/exec'; // Leave empty for now - we'll focus on reading first
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx07yVfXHtcQNHGkGnBYXG-JpO1W1YNqfIuhCmBM45XeIY5sTx3TehFqv-bxs85FGCj/exec'; // Leave empty for now - we'll focus on reading first
 
 // ========== MANAGER LOGIN ==========
 const managerUser = 'Lebo';
@@ -165,6 +165,7 @@ async function saveToSheets(entry) {
         try {
             document.getElementById('sync-status').innerHTML = '🔄 Saving to Cloud...';
             
+            // Use no-cors mode but also try to get response
             const response = await fetch(WEB_APP_URL, {
                 method: 'POST',
                 mode: 'no-cors', // This prevents CORS issues
@@ -174,8 +175,15 @@ async function saveToSheets(entry) {
                 body: JSON.stringify(entry)
             });
             
+            // Since we're using no-cors, we can't read response
+            // But we can assume it worked if no error
             document.getElementById('sync-status').innerHTML = '✅ Saved to Cloud';
             console.log('Cloud save initiated successfully');
+            
+            // Force a refresh after 2 seconds to show the new data
+            setTimeout(() => {
+                loadFromSheets();
+            }, 2000);
             
         } catch (error) {
             console.error('Error saving to cloud:', error);
@@ -187,11 +195,6 @@ async function saveToSheets(entry) {
     }
     
     return true;
-}
-
-// Get entries (from cache)
-function getEntries() {
-    return entriesCache;
 }
 
 // ========== TAB SWITCHING ==========
@@ -559,5 +562,6 @@ function clearFilter() {
 document.addEventListener('DOMContentLoaded', function() {
     checkLogin();
 });
+
 
 
