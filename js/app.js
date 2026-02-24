@@ -84,7 +84,7 @@ async function loadFromSheets() {
         }
         
         // Parse CSV
-        PapaParse.parse(csvText, {
+        Papa.parse(csvText, {
             header: true,
             skipEmptyLines: true,
             complete: function(results) {
@@ -538,3 +538,4 @@ function clearFilter() {
 document.addEventListener('DOMContentLoaded', function() {
     checkLogin();
 });
+
