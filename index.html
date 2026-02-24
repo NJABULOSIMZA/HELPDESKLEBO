@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Helpdesk Timesheet - Cloud System</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+    <!-- LOGIN PAGE -->
+    <div id="login-page" class="login-container">
+        <h2>HELPDESK DAILY TIMESHEET</h2>
+        
+        <div id="login-mode">
+            <input type="text" id="login-username" placeholder="Username" value="Lebo">
+            <input type="password" id="login-password" placeholder="Password" value="">
+            <button onclick="login()">Login</button>
+        </div>
+        
+        <div id="login-message" class="error-msg"></div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="main-app" class="container main-content">
+        <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+        <div class="user-info" id="user-info"></div>
+        
+        <h1>📋 Helpdesk Daily Timesheet <span class="sync-badge" id="sync-status">Google Sheets Cloud</span></h1>
+        
+        <div class="staff-list">
+            <strong>Staff Members:</strong>
+            <span class="staff-tag">Casey</span>
+            <span class="staff-tag">Noma</span>
+            <span class="staff-tag">Talent</span>
+            <span class="staff-tag">Sanele</span>
+            <span class="staff-tag">Njabulo</span>
+            <span class="staff-tag">Silius</span>
+            <span class="staff-tag">Bonolo</span>
+            <span class="staff-tag">Lebo</span>
+        </div>
+        
+        <!-- Tabs -->
+        <div>
+            <span class="tab active" onclick="showTab('entry')" id="tab-entry">📝 Daily Entry</span>
+            <span class="tab" onclick="showTab('view')" id="tab-view">👀 View All</span>
+            <span class="tab" onclick="showTab('report')" id="tab-report">📊 Monthly Report</span>
+        </div>
+
+        <!-- TAB 1: DAILY ENTRY -->
+        <div id="entry-view" class="active-view">
+            <h2>Daily Timesheet Entry</h2>
+            
+            <div class="form-group" style="max-width: 300px;">
+                <label>Select Staff Member</label>
+                <select id="staff-select" onchange="checkTodayEntry()">
+                    <option value="">-- Select Staff --</option>
+                    <option value="Casey">Casey</option>
+                    <option value="Noma">Noma</option>
+                    <option value="Talent">Talent</option>
+                    <option value="Sanele">Sanele</option>
+                    <option value="Njabulo">Njabulo</option>
+                    <option value="Silius">Silius</option>
+                    <option value="Bonolo">Bonolo</option>
+                    <option value="Lebo">Lebo</option>
+                </select>
+            </div>
+            
+            <input type="hidden" id="edit-id" value="">
+            
+            <form id="entry-form" onsubmit="saveEntry(event)">
+                <div class="form-group" style="max-width: 200px;">
+                    <label>Date</label>
+                    <input type="date" id="entry-date" required>
+                </div>
+
+                <!-- Form sections -->
+                <div class="form-section">
+                    <h3>📞 Communication Handling</h3>
+                    <div class="grid">
+                        <div class="form-group"><label>Inbound Calls</label><input type="number" id="inbound-calls" value="0" min="0"></div>
+                        <div class="form-group"><label>WhatsApp Chats</label><input type="number" id="whatsapp-chats" value="0" min="0"></div>
+                        <div class="form-group"><label>Emails</label><input type="number" id="emails" value="0" min="0"></div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>🎫 Ticket Management</h3>
+                    <div class="grid">
+                        <div class="form-group"><label>General Tickets Logged</label><input type="number" id="gen-logged" value="0" min="0"></div>
+                        <div class="form-group"><label>General Tickets Resolved</label><input type="number" id="gen-resolved" value="0" min="0"></div>
+                        <div class="form-group"><label>Network Down Logged</label><input type="number" id="net-logged" value="0" min="0"></div>
+                        <div class="form-group"><label>Network Down Resolved</label><input type="number" id="net-resolved" value="0" min="0"></div>
+                        <div class="form-group"><label>Fibre Break Logged</label><input type="number" id="fibre-logged" value="0" min="0"></div>
+                        <div class="form-group"><label>Fibre Break Resolved</label><input type="number" id="fibre-resolved" value="0" min="0"></div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>🔧 Installations & Scheduling</h3>
+                    <div class="grid">
+                        <div class="form-group"><label>New Installations Scheduled</label><input type="number" id="installations" value="0" min="0"></div>
+                        <div class="form-group"><label>Fibre Break Jobs Booked</label><input type="number" id="fibre-bookings" value="0" min="0"></div>
+                        <div class="form-group"><label>TOC Sent</label><input type="number" id="toc-sent" value="0" min="0"></div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>📢 Campaign & Lead Management</h3>
+                    <div class="grid">
+                        <div class="form-group"><label>Leads Received</label><input type="number" id="leads-received" value="0" min="0"></div>
+                        <div class="form-group"><label>Leads Contacted</label><input type="number" id="leads-contacted" value="0" min="0"></div>
+                        <div class="form-group"><label>Leads Converted</label><input type="number" id="leads-converted" value="0" min="0"></div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>💻 System Administration</h3>
+                    <div class="grid">
+                        <div class="form-group"><label><input type="checkbox" id="system-updated"> System Updated</label></div>
+                        <div class="form-group"><label><input type="checkbox" id="servcraft-updated"> Servcraft Updated</label></div>
+                        <div class="form-group"><label><input type="checkbox" id="router-updated"> Router Recon Updated</label></div>
+                        <div class="form-group"><label><input type="checkbox" id="ftth-tracking"> FTTH Client tracking</label></div>
+                        <div class="form-group"><label><input type="checkbox" id="daily-activities"> Daily activities</label></div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>📝 Notes</h3>
+                    <textarea id="notes" rows="3" style="width: 100%;"></textarea>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <button type="submit">💾 Save to Google Sheets</button>
+                    <button type="button" class="danger" onclick="clearForm()">🗑️ Clear Form</button>
+                    <button type="button" class="success" onclick="refreshFromSheets()">🔄 Refresh from Cloud</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- TAB 2: VIEW ALL ENTRIES -->
+        <div id="view-view" style="display: none;">
+            <h2>All Timesheet Entries</h2>
+            
+            <div style="margin-bottom: 20px;">
+                <select id="filter-staff" onchange="displayEntries()">
+                    <option value="">All Staff</option>
+                    <option value="Casey">Casey</option>
+                    <option value="Noma">Noma</option>
+                    <option value="Talent">Talent</option>
+                    <option value="Sanele">Sanele</option>
+                    <option value="Njabulo">Njabulo</option>
+                    <option value="Silius">Silius</option>
+                    <option value="Bonolo">Bonolo</option>
+                    <option value="Lebo">Lebo</option>
+                </select>
+                <input type="date" id="filter-date" onchange="displayEntries()">
+                <button onclick="displayEntries()" class="success">🔍 Filter</button>
+                <button onclick="clearFilter()">Clear Filter</button>
+                <button onclick="refreshFromSheets()" class="success">🔄 Refresh</button>
+            </div>
+            
+            <div id="entries-container"></div>
+        </div>
+
+        <!-- TAB 3: MONTHLY REPORT -->
+        <div id="report-view" style="display: none;">
+            <h2>Monthly Report</h2>
+            
+            <div style="margin-bottom: 20px; background: #f0f0f0; padding: 15px; border-radius: 5px;">
+                <select id="report-staff" style="padding: 8px; margin-right: 10px;">
+                    <option value="">Select Staff Member</option>
+                    <option value="Casey">Casey</option>
+                    <option value="Noma">Noma</option>
+                    <option value="Talent">Talent</option>
+                    <option value="Sanele">Sanele</option>
+                    <option value="Njabulo">Njabulo</option>
+                    <option value="Silius">Silius</option>
+                    <option value="Bonolo">Bonolo</option>
+                    <option value="Lebo">Lebo</option>
+                </select>
+                
+                <input type="month" id="report-month" style="padding: 8px; margin-right: 10px;">
+                
+                <button onclick="generateReport()" class="success">📊 Generate Report</button>
+                <button onclick="printReport()" class="success">🖨️ Print Report</button>
+                <button onclick="refreshFromSheets()" class="success">🔄 Refresh</button>
+            </div>
+            
+            <div id="report-container"></div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="js/app.js"></script>
+</body>
+</html>
