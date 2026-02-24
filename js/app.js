@@ -1,5 +1,4 @@
 // ========== GOOGLE SHEETS CONFIGURATION ==========
-// ========== GOOGLE SHEETS CONFIGURATION ==========
 const SHEET_ID = '1ylBjNdwEdB75RQJEHI4dviYS5NgB1A0bpa9ILGQFeIc';
 const SHEET_GID = '0';
 const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
@@ -514,4 +513,5 @@ function clearFilter() {
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     checkLogin();
+
 });
