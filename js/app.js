@@ -5,7 +5,7 @@ const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export
 
 // IMPORTANT: You need to create a Google Apps Script Web App URL for saving
 // For now, we'll use localStorage as backup until you set this up
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx07yVfXHtcQNHGkGnBYXG-JpO1W1YNqfIuhCmBM45XeIY5sTx3TehFqv-bxs85FGCj/exec'; // Leave empty for now - we'll focus on reading first
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzIf8NiJUFWaGT5XfQcd7yvrgSZfnG6-_w0MiXq3UYGc9CZjlIAzXoaJ5EzGyU2SUk/exec'; // Leave empty for now - we'll focus on reading first
 
 // ========== MANAGER LOGIN ==========
 const managerUser = 'Lebo';
@@ -562,6 +562,7 @@ function clearFilter() {
 document.addEventListener('DOMContentLoaded', function() {
     checkLogin();
 });
+
 
 
 
