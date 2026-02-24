@@ -2,8 +2,10 @@
 const SHEET_ID = '1ylBjNdwEdB75RQJEHI4dviYS5NgB1A0bpa9ILGQFeIc';
 const SHEET_GID = '0';
 const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
-// For writing, we'll use a simple form submit to Google Forms-like endpoint
-const WEB_APP_URL = 'https://njabulosimza.github.io/HELPDESKLEBO/';  // You'll get this from Apps Script
+
+// IMPORTANT: You need to create a Google Apps Script Web App URL for saving
+// For now, we'll use localStorage as backup until you set this up
+const WEB_APP_URL = ''; // Leave empty for now - we'll focus on reading first
 
 // ========== MANAGER LOGIN ==========
 const managerUser = 'Lebo';
@@ -63,18 +65,39 @@ async function loadFromSheets() {
     document.getElementById('sync-status').innerHTML = '🔄 Syncing...';
     
     try {
+        // Add cache-busting parameter to avoid cached responses
+        const url = `${SHEET_CSV_URL}&_=${Date.now()}`;
+        console.log('Fetching from:', url);
+        
         // Fetch CSV data from published sheet
-        const response = await fetch(SHEET_CSV_URL);
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const csvText = await response.text();
+        console.log('CSV text received, length:', csvText.length);
+        
+        if (csvText.length === 0) {
+            throw new Error('Empty response from Google Sheets');
+        }
         
         // Parse CSV
         PapaParse.parse(csvText, {
             header: true,
             skipEmptyLines: true,
             complete: function(results) {
+                console.log('Parse complete. Rows found:', results.data.length);
+                
+                // Filter out empty rows and ensure each has an id
                 entriesCache = results.data.filter(row => row.id && row.id.trim() !== '');
+                console.log('Valid entries:', entriesCache.length);
+                
                 document.getElementById('sync-status').innerHTML = '✅ Google Sheets Connected';
-                console.log('Loaded entries:', entriesCache.length);
+                
+                // Also save to localStorage as backup
+                localStorage.setItem('timesheet_entries', JSON.stringify(entriesCache));
                 
                 // Refresh current view if needed
                 const activeTab = document.querySelector('.tab.active')?.id.replace('tab-', '');
@@ -87,13 +110,33 @@ async function loadFromSheets() {
             },
             error: function(error) {
                 console.error('Error parsing CSV:', error);
-                document.getElementById('sync-status').innerHTML = '❌ Sync Failed';
+                document.getElementById('sync-status').innerHTML = '❌ Parse Failed';
+                
+                // Fallback to localStorage
+                loadFromLocalStorage();
             }
         });
     } catch (error) {
         console.error('Error loading from Sheets:', error);
-        document.getElementById('sync-status').innerHTML = '❌ Sync Failed';
-        alert('Failed to load data from Google Sheets. Check your Sheet ID and publishing settings.');
+        document.getElementById('sync-status').innerHTML = '❌ Fetch Failed';
+        
+        // Fallback to localStorage
+        loadFromLocalStorage();
+    }
+}
+
+// Fallback function to load from localStorage
+function loadFromLocalStorage() {
+    const saved = localStorage.getItem('timesheet_entries');
+    if (saved) {
+        entriesCache = JSON.parse(saved);
+        document.getElementById('sync-status').innerHTML = '📁 Using Local Backup';
+        console.log('Loaded from localStorage:', entriesCache.length);
+        
+        const activeTab = document.querySelector('.tab.active')?.id.replace('tab-', '');
+        if (activeTab === 'view') displayEntries();
+    } else {
+        document.getElementById('sync-status').innerHTML = '⚠️ No Data Found';
     }
 }
 
@@ -102,9 +145,9 @@ function refreshFromSheets() {
     loadFromSheets();
 }
 
-// Save entry to Google Sheets (via Web App)
+// Save entry to Google Sheets (via Web App) - simplified for now
 async function saveToSheets(entry) {
-    console.log('Saving to sheets:', entry);
+    console.log('Saving entry locally:', entry);
     
     // Update cache
     const existingIndex = entriesCache.findIndex(e => e.id === entry.id);
@@ -119,26 +162,10 @@ async function saveToSheets(entry) {
     
     document.getElementById('sync-status').innerHTML = '✅ Saved Locally';
     
-    // Show how to complete setup
-    if (WEB_APP_URL === 'YOUR_WEB_APP_URL_HERE') {
-        console.log('Web App URL not configured. Data saved locally only.');
-    } else {
-        // If Web App URL is configured, send data to Google Sheets
-        try {
-            const response = await fetch(WEB_APP_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(entry)
-            });
-            document.getElementById('sync-status').innerHTML = '✅ Saved to Cloud';
-        } catch (error) {
-            console.error('Error saving to sheets:', error);
-            document.getElementById('sync-status').innerHTML = '⚠️ Saved Locally Only';
-        }
-    }
+    // Note: For now, we're only saving locally
+    // To enable cloud saving, you'll need to set up a Google Apps Script Web App
+    
+    return true;
 }
 
 // Get entries (from cache)
@@ -225,7 +252,7 @@ async function saveEntry(event) {
     // Add to cache
     entriesCache.push(entry);
     
-    // Save to Google Sheets
+    // Save to localStorage (cloud saving disabled for now)
     await saveToSheets(entry);
     
     alert('Entry saved successfully!');
@@ -341,9 +368,6 @@ async function deleteEntry(id) {
     
     entriesCache = entriesCache.filter(e => e.id !== id);
     localStorage.setItem('timesheet_entries', JSON.stringify(entriesCache));
-    
-    // In a full implementation, you'd also delete from Google Sheets
-    // For now, we'll just update the cache
     
     displayEntries();
 }
@@ -513,6 +537,4 @@ function clearFilter() {
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     checkLogin();
-
 });
-
