@@ -7,13 +7,12 @@ body {
     padding: 0; 
     margin: 0;
     min-height: 100vh;
-    background: url('images/ftthsa.png') no-repeat center center fixed;
+    background: url('../images/ftthsa.png') no-repeat center center fixed;
     background-size: cover;
     display: flex;
     align-items: center;
     justify-content: center;
 }
-
 body::before {
     content: '';
     position: fixed;
@@ -268,5 +267,6 @@ button.success {
     margin-left: 10px;
 
 }
+
 
 
